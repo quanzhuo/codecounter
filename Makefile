@@ -11,7 +11,7 @@ INSTDIR = .
 LIBS =
 
 # compiler options
-CFLAGS =
+CFLAGS = -g
 
 # All the object files
 OBJECTS := $(patsubst %.c, %.o, $(wildcard *.c))
@@ -19,7 +19,7 @@ OBJECTS := $(patsubst %.c, %.o, $(wildcard *.c))
 all: codecounter
 
 codecounter: $(OBJECTS)
-	$(CC) -I$(INCLUDE) -o $@ $(OBJECTS) $(LIBS)
+	$(CC) $(CFLAGS) -I$(INCLUDE) -o $@ $(OBJECTS) $(LIBS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -I$(INCLUDE) -c $^ -o $@
