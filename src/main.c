@@ -2,11 +2,17 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include "counter.h"
+#include "misc.h"
 
-extern struct statistics result;
+extern struct statis_data result;
 
 int main(int argc, char const *argv[]) {
   struct stat file_mode;
+
+  if(argc != 2) {
+    print_usage();
+    exit(EXIT_FAILURE);
+  }
 
   if(stat(argv[1], &file_mode)) {
     perror("stat");
@@ -19,10 +25,7 @@ int main(int argc, char const *argv[]) {
   if(S_ISREG(file_mode.st_mode))
     process_file(argv[1]);
 
-  printf("totally: %ld\n", result.total);
-  printf("blank: %ld\n", result.blank);
-  printf("comment: %ld\n", result.comment);
-  printf("code: %ld\n", result.code);
+  print_result(&result);
 
   return 0;
 }

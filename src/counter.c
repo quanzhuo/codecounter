@@ -4,38 +4,23 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdbool.h>
+#include <dirent.h>
+#include <sys/stat.h>
 
-struct statistics result;
-enum file_type type;
+void check_comment_type(const char *);
+
+struct statis_data result;
+enum file_type type = UNKNOWN;
+
+// extern int errno;
 
 void process_file(const char *name) {
-  const char *p_suffix = name;
-  while((*p_suffix != '.') && (*p_suffix != '\0'))
-    p_suffix++;
-
-  if (! *p_suffix) {
-    fprintf(stderr, "%s, NO SUFFIX\n", name);
-    exit(EXIT_FAILURE);
-  }
-
-  unsigned len = strlen(p_suffix);
-  char suffix[len+1];
-  strcpy(suffix, p_suffix);
-  char *ptr_suffix = suffix;
-
-  while (*ptr_suffix) {
-    *ptr_suffix = tolower(*ptr_suffix);
-    ptr_suffix++;
-  }
-
-  if(!strcmp(suffix, ".c") || !strcmp(suffix, ".cpp")
-      || ! strcmp(suffix, ".java"))
-    type = C_STYLE;
-  else if (!strcmp(suffix, ".py") || !strcmp(suffix, ".pl")
-      || !strcmp(suffix, ".sh"))
-    type = SH_STYLE;
+  check_comment_type(name);
+  if (type == UNKNOWN)
+    return;
 
   FILE *file = fopen(name, "r");
+  printf("count file: %s\n", name);
   if (!file) {
     perror("fopen");
     exit(EXIT_FAILURE);
@@ -58,7 +43,37 @@ void process_file(const char *name) {
 }
 
 void process_dir(const char *name) {
+  DIR *p_dir;
+  if ((p_dir = opendir(name)) == NULL) {
+    perror("opendir");
+    exit(EXIT_FAILURE);
+  }
 
+  struct dirent *p_dirent;
+
+  // set errno = 0 to distinguish between an
+  //end-of-directory condition or an error
+  // errno = 0;
+
+  while ((p_dirent = readdir(p_dir)) != NULL) {
+    if(skip_some_entries(p_dirent->d_name))
+      continue;
+    // basename + '/' + filename + '\0'
+    size_t fullnamelen = strlen(name) + 1 + strlen(p_dirent->d_name) + 1;
+    char fullname[fullnamelen];
+    strcpy(fullname, name);
+    strcat(strcat(fullname, "/"), p_dirent->d_name);
+
+    if (is_dir(fullname)) {
+      // printf("%s is a directory\n", fullname);
+      process_dir(fullname);
+    } else
+      process_file(fullname);
+      // printf("%s is a regular file\n", fullname);
+
+    // printf("%s\n", fullname);
+  }
+  closedir(p_dir);
 }
 
 void c_counter(FILE *file) {
@@ -143,4 +158,70 @@ bool embeded_comment(const char *ptr) {
   // }
   // 暂时不考虑嵌入代码行的注释
   return false;
+}
+
+bool is_dir(const char *pathname) {
+  struct stat file_mode;
+
+  if(stat(pathname, &file_mode)) {
+    perror("stat");
+    exit(EXIT_FAILURE);
+  }
+
+  if(S_ISDIR(file_mode.st_mode))
+    return true;
+  else
+    return false;
+}
+
+bool skip_some_entries(const char *entry_name) {
+  // skip . and ..
+  if (!strcmp(entry_name, ".") ||
+      !strcmp(entry_name, "..") ||
+      // skip repos
+      !strcmp(entry_name, ".git") ||
+      !strcmp(entry_name, ".svn") ||
+      !strcmp(entry_name, ".hg")
+    )
+    return true;
+  return false;
+}
+
+void check_comment_type(const char *name) {
+  if(!strncmp(name, "./", 2))
+    name += 2;
+  else if (!strncmp(name, "../", 3))
+    name += 3;
+  const char *p_suffix = name;
+
+  // walk to the end
+  while(*++p_suffix != '\0')
+    p_suffix++;
+  // walk back to the last '.' character
+  while(*p_suffix != '.')
+    p_suffix--;
+
+  if (*p_suffix != '.') {
+    type = UNKNOWN;
+    return;
+  }
+
+  unsigned len = strlen(p_suffix);
+  char suffix[len+1];
+  strcpy(suffix, p_suffix);
+  char *ptr_suffix = suffix;
+
+  while (*ptr_suffix) {
+    *ptr_suffix = tolower(*ptr_suffix);
+    ptr_suffix++;
+  }
+
+  if(!strcmp(suffix, ".c") || !strcmp(suffix, ".cpp")
+      || ! strcmp(suffix, ".java") || !strcmp(suffix, ".h"))
+    type = C_STYLE;
+  else if (!strcmp(suffix, ".py") || !strcmp(suffix, ".pl")
+      || !strcmp(suffix, ".sh"))
+    type = SH_STYLE;
+  else
+    type = UNKNOWN;
 }

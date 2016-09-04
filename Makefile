@@ -31,8 +31,8 @@ clean:
 	-rm -rf codecounter.exe codecounter
 
 install: codecounter
-	@if [ ! -d $INSTDIR ]; then\
-		 mkdir $INSTDIR; \
+	@if [ ! -d ${INSTDIR} ]; then\
+		 mkdir ${INSTDIR}; \
 	 fi; \
-	 cp codecounter* $INSTDIR; \
+	 cp codecounter* ${INSTDIR}; \
 	 echo "installed in ${INSTDIR}"
