@@ -181,7 +181,8 @@ bool skip_some_entries(const char *entry_name) {
       // skip repos
       !strcmp(entry_name, ".git") ||
       !strcmp(entry_name, ".svn") ||
-      !strcmp(entry_name, ".hg")
+      !strcmp(entry_name, ".hg") ||
+      !strcmp(entry_name, ".repo")
     )
     return true;
   return false;

@@ -9,6 +9,7 @@ screenshot
 + 代码 1448万行
 + 空行 270万行
 + 注释 285万行
+
  ![linux](screenshot/Screenshot1.png)
 
 usage
