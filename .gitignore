@@ -1,3 +1,7 @@
+# Executable files
+codecounter
+codecounter.exe
+
 # Object files
 *.o
 *.ko

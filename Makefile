@@ -2,7 +2,7 @@
 CC = gcc
 
 # Include directory
-INCLUDE = .
+INCLUDE = include
 
 # Where to install
 INSTDIR = .
@@ -14,18 +14,25 @@ LIBS =
 CFLAGS = -g
 
 # All the object files
-OBJECTS := $(patsubst %.c, %.o, $(wildcard *.c))
+OBJECTS := $(patsubst src%.c, src%.o, $(wildcard src/*.c))
 
 all: codecounter
 
 codecounter: $(OBJECTS)
 	$(CC) $(CFLAGS) -I$(INCLUDE) -o $@ $(OBJECTS) $(LIBS)
 
-%.o: %.c
+src/%.o: src/%.c
 	$(CC) $(CFLAGS) -I$(INCLUDE) -c $^ -o $@
 
 .PHONY: clean
 
 clean:
-	-rm -rf *.o
+	-rm -rf src/*.o
 	-rm -rf codecounter.exe codecounter
+
+install: codecounter
+	@if [ ! -d $INSTDIR ]; then\
+		 mkdir $INSTDIR; \
+	 fi; \
+	 cp codecounter* $INSTDIR; \
+	 echo "installed in ${INSTDIR}"
