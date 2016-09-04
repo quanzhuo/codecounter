@@ -20,6 +20,9 @@ int main(int argc, char const *argv[]) {
     process_file(argv[1]);
 
   printf("totally: %ld\n", result.total);
+  printf("blank: %ld\n", result.blank);
+  printf("comment: %ld\n", result.comment);
+  printf("code: %ld\n", result.code);
 
   return 0;
 }
