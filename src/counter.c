@@ -196,10 +196,10 @@ void check_comment_type(const char *name) {
   const char *p_suffix = name;
 
   // walk to the end
-  while(*++p_suffix != '\0')
+  while(*p_suffix != '\0')
     p_suffix++;
   // walk back to the last '.' character
-  while(*p_suffix != '.')
+  while(*p_suffix != '.' && p_suffix > name)
     p_suffix--;
 
   if (*p_suffix != '.') {
