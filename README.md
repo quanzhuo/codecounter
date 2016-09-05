@@ -10,7 +10,14 @@ screenshot
 + 空行 270万行
 + 注释 285万行
 
- ![linux](screenshot/Screenshot1.png)
+ ![linux](screenshot/linux.png)
+ 
+ 下图是统计的 Android 7.0 源码树：
+ + 总计 7110 万行
+ + 代码 5033 万行
+ + 空行 707  万行
+ + 注释 137  万行
+ ![aosp](screenshot/aosp.png)
 
 usage
 -----

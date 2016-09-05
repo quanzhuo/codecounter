@@ -16,6 +16,8 @@ int main(int argc, char const *argv[]) {
 
   if(stat(argv[1], &file_mode)) {
     perror("stat");
+    printf("file: %s\n", __FILE__);
+    printf("line: %d\n", __LINE__);
     exit(EXIT_FAILURE);
   }
 

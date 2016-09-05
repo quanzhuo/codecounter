@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 void check_comment_type(const char *);
 
@@ -22,6 +23,8 @@ void process_file(const char *name) {
   FILE *file = fopen(name, "r");
   printf("count file: %s\n", name);
   if (!file) {
+    if (errno == ENOENT)
+      return;
     perror("fopen");
     exit(EXIT_FAILURE);
   }
@@ -163,10 +166,7 @@ bool embeded_comment(const char *ptr) {
 bool is_dir(const char *pathname) {
   struct stat file_mode;
 
-  if(stat(pathname, &file_mode)) {
-    perror("stat");
-    exit(EXIT_FAILURE);
-  }
+  lstat(pathname, &file_mode);
 
   if(S_ISDIR(file_mode.st_mode))
     return true;
