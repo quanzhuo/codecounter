@@ -35,8 +35,8 @@ enum code_t {
 
 #define BUFSIZE 1024
 
-void process_file(const char *);
-void process_dir(const char *);
+void analysis_file(char *);
+void loop_dir(const char *);
 bool embeded_comment(const char*);
 void c_counter(FILE *);
 void sh_counter(FILE *);

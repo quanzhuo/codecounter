@@ -2,6 +2,9 @@
 codecounter
 codecounter.exe
 
+# ignore debug log
+log
+
 # Object files
 *.o
 *.ko

@@ -17,9 +17,7 @@ void check_type(const char *);
 struct statis_data result;
 enum code_t code = UNKNOWN;
 
-// extern int errno;
-
-void process_file(const char *name) {
+void analysis_file(char *name) {
   check_type(name);
   if (code == UNKNOWN) {
     #ifdef DEBUG
@@ -29,8 +27,9 @@ void process_file(const char *name) {
   }
 
   FILE *file = fopen(name, "r");
-  printf("counting file: %s\n", name);
+  printf("analysizing file: %s\n", name);
   if (!file) {
+    // 当符号链接指向的文件不存在时，简单跳过
     if (errno == ENOENT)
       return;
     perror("fopen");
@@ -59,7 +58,7 @@ void process_file(const char *name) {
   }
 }
 
-void process_dir(const char *name) {
+void loop_dir(const char *name) {
   DIR *p_dir;
   if ((p_dir = opendir(name)) == NULL) {
     perror("opendir");
@@ -67,11 +66,6 @@ void process_dir(const char *name) {
   }
 
   struct dirent *p_dirent;
-
-  // set errno = 0 to distinguish between an
-  //end-of-directory condition or an error
-  // errno = 0;
-
   while ((p_dirent = readdir(p_dir)) != NULL) {
     if(skip_some_entries(p_dirent->d_name))
       continue;
@@ -83,12 +77,9 @@ void process_dir(const char *name) {
 
     if (is_dir(fullname)) {
       // printf("%s is a directory\n", fullname);
-      process_dir(fullname);
+      loop_dir(fullname);
     } else
-      process_file(fullname);
-      // printf("%s is a regular file\n", fullname);
-
-    // printf("%s\n", fullname);
+      analysis_file(fullname);
   }
   closedir(p_dir);
 }
@@ -161,7 +152,6 @@ void c_counter(FILE *file) {
     // 嵌入代码行的注释
     if (embeded_comment(ptr))
       result.comment++;
-
   }
 }
 

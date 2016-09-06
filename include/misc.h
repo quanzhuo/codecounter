@@ -8,6 +8,6 @@
 #include "counter.h"
 
 void print_result(struct statis_data *);
-void print_usage();
+void usage_and_quit();
 
 #endif

@@ -41,9 +41,11 @@ void print_result(struct statis_data *ptr_data) {
   printf("Totally:  %10.0f\n", total);
 }
 
-void print_usage() {
-  printf("Usage: codecounter [OPTION]... FILE\n");
-  printf("\nstatistics your source code. supply a file or directory\n"
-         "that contains the source files. codecounter will print\n"
-         "how many lines of code, blank and comment in you project\n\n");
+void usage_and_quit() {
+  printf("Usage: codecounter [-h|--help]\n");
+  printf("       codecounter PATH ...\n");
+  printf("\nstatistics your source code. supply some files or dirs\n"
+         "codecounter will print how many lines of code, blank and\n"
+         "comment in you project\n\n");
+  exit(EXIT_SUCCESS);
 }
