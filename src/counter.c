@@ -8,20 +8,28 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-void check_comment_type(const char *);
+void check_type(const char *);
+
+#ifdef DEBUG
+  extern FILE *debuglog;
+#endif
 
 struct statis_data result;
-enum file_type type = UNKNOWN;
+enum code_t code = UNKNOWN;
 
 // extern int errno;
 
 void process_file(const char *name) {
-  check_comment_type(name);
-  if (type == UNKNOWN)
+  check_type(name);
+  if (code == UNKNOWN) {
+    #ifdef DEBUG
+      fprintf(debuglog, "unknow file type: %s\n", name);
+    #endif
     return;
+  }
 
   FILE *file = fopen(name, "r");
-  printf("count file: %s\n", name);
+  printf("counting file: %s\n", name);
   if (!file) {
     if (errno == ENOENT)
       return;
@@ -29,12 +37,18 @@ void process_file(const char *name) {
     exit(EXIT_FAILURE);
   }
 
-  switch(type) {
-    case C_STYLE:
+  switch(code) {
+    case C:
+    case CPP:
+    case HEADER:
+    case JAVA:
       c_counter(file);
       break;
-    case SH_STYLE:
+    case PYTHON:
+    case PERL:
+    case SHELL:
       sh_counter(file);
+      break;
     default:
       break;
   }
@@ -127,18 +141,65 @@ void c_counter(FILE *file) {
     }
 
     // 代码行
-    result.code++;
+    switch (code) {
+      case C:
+        result.c++;
+        break;
+      case CPP:
+        result.cpp++;
+        break;
+      case HEADER:
+        result.header++;
+        break;
+      case JAVA:
+        result.java++;
+        break;
+      default:
+        break;
+    }
 
     // 嵌入代码行的注释
     if (embeded_comment(ptr))
       result.comment++;
 
-    result.total++;
   }
 }
 
 void sh_counter(FILE *file) {
+  char buffer[BUFSIZE];
 
+  while (fgets(buffer, BUFSIZE-1, file)) {
+    unsigned len = strlen(buffer);
+    char *ptr = buffer;
+
+    // 跳过行前空白
+    while (isspace(*ptr) && *ptr != '\n')
+      ptr++;
+
+    // 空白行
+    if (*ptr == '\n') {
+      result.blank++;
+      continue;
+    } else if (*ptr == '#') {
+      result.comment++;
+      continue;
+    }
+
+    // 代码
+    switch (code) {
+      case PYTHON:
+        result.python++;
+        break;
+      case PERL:
+        result.perl++;
+        break;
+      case SHELL:
+        result.shell++;
+        break;
+      default:
+        break;
+    }
+  }
 }
 
 bool embeded_comment(const char *ptr) {
@@ -166,12 +227,10 @@ bool embeded_comment(const char *ptr) {
 bool is_dir(const char *pathname) {
   struct stat file_mode;
 
-  lstat(pathname, &file_mode);
-
-  if(S_ISDIR(file_mode.st_mode))
-    return true;
-  else
+  if (lstat(pathname, &file_mode) == -1)
     return false;
+
+  return S_ISDIR(file_mode.st_mode);
 }
 
 bool skip_some_entries(const char *entry_name) {
@@ -188,13 +247,13 @@ bool skip_some_entries(const char *entry_name) {
   return false;
 }
 
-void check_comment_type(const char *name) {
+void check_type(const char *name) {
   if(!strncmp(name, "./", 2))
     name += 2;
   else if (!strncmp(name, "../", 3))
     name += 3;
-  const char *p_suffix = name;
 
+  const char *p_suffix = name;
   // walk to the end
   while(*p_suffix != '\0')
     p_suffix++;
@@ -203,26 +262,32 @@ void check_comment_type(const char *name) {
     p_suffix--;
 
   if (*p_suffix != '.') {
-    type = UNKNOWN;
+    code = UNKNOWN;
     return;
   }
 
-  unsigned len = strlen(p_suffix);
+  size_t len = strlen(p_suffix);
   char suffix[len+1];
   strcpy(suffix, p_suffix);
   char *ptr_suffix = suffix;
-
+  //change suffix to lower case
   while (*ptr_suffix) {
     *ptr_suffix = tolower(*ptr_suffix);
     ptr_suffix++;
   }
 
-  if(!strcmp(suffix, ".c") || !strcmp(suffix, ".cpp")
-      || ! strcmp(suffix, ".java") || !strcmp(suffix, ".h"))
-    type = C_STYLE;
-  else if (!strcmp(suffix, ".py") || !strcmp(suffix, ".pl")
-      || !strcmp(suffix, ".sh"))
-    type = SH_STYLE;
+  if (!strcmp(suffix, ".c"))
+    code = C;
+  else if (!strcmp(suffix, ".cc") || !strcmp(suffix, ".cpp"))
+    code = CPP;
+  else if (!strcmp(suffix, ".java"))
+    code = JAVA;
+  else if (!strcmp(suffix, ".h"))
+    code = HEADER;
+  else if (!strcmp(suffix, ".py") || !strcmp(suffix, ".pyw"))
+    code = PYTHON;
+  else if (!strcmp(suffix, ".sh"))
+    code = SHELL;
   else
-    type = UNKNOWN;
+    code = UNKNOWN;
 }

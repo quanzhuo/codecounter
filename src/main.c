@@ -5,6 +5,8 @@
 #include "misc.h"
 
 extern struct statis_data result;
+extern FILE *debuglog;
+
 
 int main(int argc, char const *argv[]) {
   struct stat file_mode;
@@ -21,6 +23,14 @@ int main(int argc, char const *argv[]) {
     exit(EXIT_FAILURE);
   }
 
+  #ifdef DEBUG
+    debuglog = fopen("log", "w+");
+    if(debuglog == NULL) {
+      perror("fopen");
+      exit(EXIT_FAILURE);
+    }
+  #endif
+
   if(S_ISDIR(file_mode.st_mode))
     process_dir(argv[1]);
 
@@ -29,5 +39,8 @@ int main(int argc, char const *argv[]) {
 
   print_result(&result);
 
+  #ifdef DEBUG
+    fclose(debuglog);
+  #endif
   return 0;
 }

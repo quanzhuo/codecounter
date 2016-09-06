@@ -7,14 +7,29 @@
 
 struct statis_data {
   unsigned long total;
-  unsigned long code;
   unsigned long blank;
   unsigned long comment;
+  unsigned long c;
+  unsigned long cpp;
+  unsigned long java;
+  unsigned long python;
+  unsigned long perl;
+  unsigned long shell;
+  unsigned long makefile;
+  unsigned long plaintext;
+  unsigned long header;
 };
 
-enum file_type {
-  C_STYLE,
-  SH_STYLE,
+enum code_t {
+  C,
+  CPP,
+  JAVA,
+  PYTHON,
+  PERL,
+  SHELL,
+  MAKEFILE,
+  PLAINTEXT,
+  HEADER,
   UNKNOWN
 };
 
