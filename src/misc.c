@@ -14,8 +14,10 @@ void print_result(struct statis_data *ptr_data) {
   double  total = ptr_data->c + ptr_data->cpp + ptr_data->java
                 + ptr_data->header + ptr_data->python + ptr_data->perl
                 + ptr_data->shell + ptr_data->makefile +ptr_data->plaintext
-                + ptr_data->comment + ptr_data->blank;
+                + ptr_data->comment + ptr_data->blank + ptr_data->assembly;
   printf("\nITEM:       %10s%10s\n", "COUNT", "PERCENT");
+  if (ptr_data->assembly)
+    printf("assembly: %10ld%10.2f\n", ptr_data->assembly, ptr_data->assembly/total);
   if (ptr_data->c)
     printf("c:        %10ld%10.2f\n", ptr_data->c, ptr_data->c / total);
   if (ptr_data->cpp)

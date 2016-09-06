@@ -37,16 +37,17 @@ void analysis_file(char *name) {
   }
 
   switch(code) {
+    case ASM:
     case C:
     case CPP:
     case HEADER:
     case JAVA:
-      c_counter(file);
+      c_style_counter(file);
       break;
     case PYTHON:
     case PERL:
     case SHELL:
-      sh_counter(file);
+      sh_style_counter(file);
       break;
     default:
       break;
@@ -84,7 +85,7 @@ void loop_dir(const char *name) {
   closedir(p_dir);
 }
 
-void c_counter(FILE *file) {
+void c_style_counter(FILE *file) {
   char buffer[BUFSIZE];
   bool in_multi_line_comment = false;
 
@@ -136,14 +137,17 @@ void c_counter(FILE *file) {
       case C:
         result.c++;
         break;
-      case CPP:
-        result.cpp++;
-        break;
       case HEADER:
         result.header++;
         break;
+      case CPP:
+        result.cpp++;
+        break;
       case JAVA:
         result.java++;
+        break;
+      case ASM:
+        result.assembly++;
         break;
       default:
         break;
@@ -155,7 +159,7 @@ void c_counter(FILE *file) {
   }
 }
 
-void sh_counter(FILE *file) {
+void sh_style_counter(FILE *file) {
   char buffer[BUFSIZE];
 
   while (fgets(buffer, BUFSIZE-1, file)) {
@@ -274,6 +278,8 @@ void check_type(const char *name) {
     code = JAVA;
   else if (!strcmp(suffix, ".h"))
     code = HEADER;
+  else if (!strcmp(suffix, ".s"))
+    code = ASM;
   else if (!strcmp(suffix, ".py") || !strcmp(suffix, ".pyw"))
     code = PYTHON;
   else if (!strcmp(suffix, ".sh"))
