@@ -47,4 +47,6 @@ bool is_dir(const char *);
 bool skip_some_entries(const char *);
 void check_comment_type(const char *);
 ssize_t mygetline(char **, FILE *);
+bool ends_with(const char*, const char*);
+void plaintext_counter(FILE *);
 #endif

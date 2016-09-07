@@ -49,8 +49,11 @@ void analysis_file(char *name) {
     case PYTHON:
     case PERL:
     case SHELL:
+    case MAKEFILE:
       sh_style_counter(file);
       break;
+    case PLAINTEXT:
+      plaintext_counter(file);
     default:
       break;
   }
@@ -200,6 +203,11 @@ void sh_style_counter(FILE *file) {
       case SHELL:
         result.shell++;
         break;
+      case MAKEFILE:
+        result.makefile++;
+        break;
+      case PLAINTEXT:
+        result.plaintext++;
       default:
         break;
     }
@@ -257,13 +265,26 @@ void check_type(const char *name) {
     name += 2;
   else if (!strncmp(name, "../", 3))
     name += 3;
+  size_t namelen = strlen(name);
+  char lowername[namelen + 1];
+  strcpy(lowername, name);
 
-  const char *p_suffix = name;
-  // walk to the end
-  while(*p_suffix != '\0')
+  char *p_suffix = lowername;
+  while (*p_suffix){
+    *p_suffix = tolower(*p_suffix);
     p_suffix++;
+  }
+
+  if (ends_with(lowername, "makefile")){
+    code = MAKEFILE;
+    return ;
+  } else if (ends_with(lowername, "readme")) {
+    code = PLAINTEXT;
+    return ;
+  }
+
   // walk back to the last '.' character
-  while(*p_suffix != '.' && p_suffix > name)
+  while(*p_suffix != '.' && p_suffix > lowername)
     p_suffix--;
 
   if (*p_suffix != '.') {
@@ -271,30 +292,24 @@ void check_type(const char *name) {
     return;
   }
 
-  size_t len = strlen(p_suffix);
-  char suffix[len+1];
-  strcpy(suffix, p_suffix);
-  char *ptr_suffix = suffix;
-  //change suffix to lower case
-  while (*ptr_suffix) {
-    *ptr_suffix = tolower(*ptr_suffix);
-    ptr_suffix++;
-  }
-
-  if (!strcmp(suffix, ".c"))
+  if (!strcmp(p_suffix, ".c"))
     code = C;
-  else if (!strcmp(suffix, ".cc") || !strcmp(suffix, ".cpp"))
+  else if (!strcmp(p_suffix, ".cc") || !strcmp(p_suffix, ".cpp"))
     code = CPP;
-  else if (!strcmp(suffix, ".java"))
+  else if (!strcmp(p_suffix, ".java"))
     code = JAVA;
-  else if (!strcmp(suffix, ".h"))
+  else if (!strcmp(p_suffix, ".h"))
     code = HEADER;
-  else if (!strcmp(suffix, ".s"))
+  else if (!strcmp(p_suffix, ".s"))
     code = ASM;
-  else if (!strcmp(suffix, ".py") || !strcmp(suffix, ".pyw"))
+  else if (!strcmp(p_suffix, ".py") || !strcmp(p_suffix, ".pyw"))
     code = PYTHON;
-  else if (!strcmp(suffix, ".sh"))
+  else if (!strcmp(p_suffix, ".sh"))
     code = SHELL;
+  else if (!strcmp(p_suffix, ".md") || !strcmp(p_suffix, ".txt"))
+    code = PLAINTEXT;
+  else if(!strcmp(p_suffix, ".mk"))
+    code = MAKEFILE;
   else
     code = UNKNOWN;
 }
@@ -340,4 +355,20 @@ ssize_t mygetline(char **buffer, FILE *stream) {
     ptr += bytes_read;
   }
   return 0;
+}
+
+bool ends_with(const char *str1, const char *str2) {
+  size_t len1 = strlen(str1);
+  size_t len2 = strlen(str2);
+  if (len1 < len2)
+    return false;
+  return strstr(str1, str2) + len2 == str1 + len1;
+}
+
+void plaintext_counter(FILE *stream) {
+  char *buffer = NULL;
+  while(!mygetline(&buffer, stream)){
+    result.plaintext++;
+    free(buffer);
+  }
 }
