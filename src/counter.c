@@ -8,6 +8,8 @@
 #include <sys/stat.h>
 #include <errno.h>
 
+#define BLOCK   80
+
 void check_type(const char *);
 
 #ifdef DEBUG
@@ -86,10 +88,10 @@ void loop_dir(const char *name) {
 }
 
 void c_style_counter(FILE *file) {
-  char buffer[BUFSIZE];
   bool in_multi_line_comment = false;
+  char *buffer = NULL;
 
-  while (fgets(buffer, BUFSIZE-1, file)) {
+  while (!mygetline(&buffer, file)){
     unsigned len = strlen(buffer);
     char *ptr = buffer;
 
@@ -100,7 +102,8 @@ void c_style_counter(FILE *file) {
       // 多行注释是否结束？
       if (strstr(buffer, "*/") != NULL)
         in_multi_line_comment = false;
-      continue;
+        free(buffer);
+        continue;
     }
 
     // 跳过行前空白
@@ -111,6 +114,7 @@ void c_style_counter(FILE *file) {
     if (*ptr == '\n') {
       result.blank++;
       result.total++;
+      free(buffer);
       continue;
     }
 
@@ -118,6 +122,7 @@ void c_style_counter(FILE *file) {
     if (*ptr == '/' && *(ptr + 1) == '/') {
       result.comment++;
       result.total++;
+      free(buffer);
       continue;
     }
 
@@ -129,6 +134,7 @@ void c_style_counter(FILE *file) {
       // 多行注释是否在本行结束
       if (strstr(ptr, "*/") != NULL)
         in_multi_line_comment = false;
+        free(buffer);
       continue;
     }
 
@@ -156,13 +162,15 @@ void c_style_counter(FILE *file) {
     // 嵌入代码行的注释
     if (embeded_comment(ptr))
       result.comment++;
+
+    free(buffer);
   }
 }
 
 void sh_style_counter(FILE *file) {
-  char buffer[BUFSIZE];
+  char *buffer;
 
-  while (fgets(buffer, BUFSIZE-1, file)) {
+  while (!mygetline(&buffer, file)) {
     unsigned len = strlen(buffer);
     char *ptr = buffer;
 
@@ -173,9 +181,11 @@ void sh_style_counter(FILE *file) {
     // 空白行
     if (*ptr == '\n') {
       result.blank++;
+      free(buffer);
       continue;
     } else if (*ptr == '#') {
       result.comment++;
+      free(buffer);
       continue;
     }
 
@@ -193,6 +203,7 @@ void sh_style_counter(FILE *file) {
       default:
         break;
     }
+    free(buffer);
   }
 }
 
@@ -286,4 +297,47 @@ void check_type(const char *name) {
     code = SHELL;
   else
     code = UNKNOWN;
+}
+
+// 读取 stream 中的一行存储在 *buffer 所指向的缓冲区中。
+// 用户必须自己释放 *buffer 指向的内存
+// gnu c 库中的 getline 函数可以完成同样的任务
+// 本函数并没有考虑文件空洞的存在
+// return : 0 on success;
+//         -1 on error;
+ssize_t mygetline(char **buffer, FILE *stream) {
+  size_t buffer_len = BLOCK;
+  size_t bytes_read = 0;
+  char *ptr = NULL;
+
+  // 分配 BLOCK 字节
+  if ( !(*buffer = (char *)malloc(BLOCK)) )
+    return -1;
+
+  // 从流中读取 BLOCK - 1 字节
+  if(!fgets(*buffer, BLOCK, stream))
+    return -1;
+
+  // 本次实际读取的字节数
+  bytes_read = strlen(*buffer);
+  // ptr 指向 '\0'
+  ptr = *buffer + bytes_read;
+
+  // 缓冲区太小，一行没读完，重新分配一个更大的缓冲区
+  while (*(ptr - 1) != '\n') {
+    buffer_len = buffer_len + BLOCK;
+    if ( !(*buffer = (char *)realloc(*buffer, buffer_len)) )
+      return -1;
+    ptr = *buffer + strlen(*buffer);
+    if (!fgets(ptr, BLOCK, stream)) {
+      char *newbuffer = malloc(ptr - *buffer + 1);
+      strncpy(newbuffer, *buffer, ptr - *buffer);
+      free(*buffer);
+      *buffer = newbuffer;
+      return 0;
+    }
+    bytes_read = strlen(ptr);
+    ptr += bytes_read;
+  }
+  return 0;
 }
