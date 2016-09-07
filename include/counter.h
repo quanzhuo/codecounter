@@ -17,22 +17,29 @@ struct statis_data {
   unsigned long python;
   unsigned long perl;
   unsigned long shell;
+  unsigned long go;
   unsigned long makefile;
   unsigned long plaintext;
   unsigned long header;
+  unsigned long xml;
 };
 
 enum code_t {
-  ASM,
+  // 使用 C 风格注释的汇编文件
+  ASM_C,
+  // 以分号为注释开头的汇编文件
+  ASM_SEMI,
   C,
   CPP,
   JAVA,
   PYTHON,
   PERL,
+  GO,
   SHELL,
   MAKEFILE,
   PLAINTEXT,
   HEADER,
+  XML,
   UNKNOWN
 };
 
@@ -49,4 +56,6 @@ void check_comment_type(const char *);
 ssize_t mygetline(char **, FILE *);
 bool ends_with(const char*, const char*);
 void plaintext_counter(FILE *);
+void asm_semi_counter(FILE *);
+void xml_style_counter(FILE *);
 #endif

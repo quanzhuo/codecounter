@@ -39,11 +39,12 @@ void analysis_file(char *name) {
   }
 
   switch(code) {
-    case ASM:
+    case ASM_C:
     case C:
     case CPP:
     case HEADER:
     case JAVA:
+    case GO:
       c_style_counter(file);
       break;
     case PYTHON:
@@ -54,6 +55,10 @@ void analysis_file(char *name) {
       break;
     case PLAINTEXT:
       plaintext_counter(file);
+    case ASM_SEMI:
+      asm_semi_counter(file);
+    case XML:
+      xml_style_counter(file);
     default:
       break;
   }
@@ -155,8 +160,11 @@ void c_style_counter(FILE *file) {
       case JAVA:
         result.java++;
         break;
-      case ASM:
+      case ASM_C:
         result.assembly++;
+        break;
+      case GO:
+        result.go++;
         break;
       default:
         break;
@@ -211,6 +219,78 @@ void sh_style_counter(FILE *file) {
       default:
         break;
     }
+    free(buffer);
+  }
+}
+
+void asm_semi_counter(FILE *stream) {
+  char *buffer = NULL;
+  while (!mygetline(&buffer, stream)) {
+    char *ptr = buffer;
+
+    // 跳过行前空白
+    while (isspace(*ptr) && *ptr != '\n')
+      ptr++;
+
+    // 空白行
+    if (*ptr == '\n') {
+      result.blank++;
+      free(buffer);
+      continue;
+    } else if (*ptr == ';') {
+      result.comment++;
+      free(buffer);
+      continue;
+    }
+
+    // 代码
+    result.assembly++;
+    free(buffer);
+  }
+}
+
+void xml_style_counter(FILE *file) {
+  bool in_multi_line_comment = false;
+  char *buffer = NULL;
+  while (!mygetline(&buffer, file)){
+    unsigned len = strlen(buffer);
+    char *ptr = buffer;
+
+    // 处于多行注释中
+    if (in_multi_line_comment) {
+      result.comment++;
+      result.total++;
+      // 多行注释是否结束？
+      if (strstr(buffer, "-->") != NULL)
+        in_multi_line_comment = false;
+        free(buffer);
+        continue;
+    }
+
+    // 跳过行前空白
+    while (isspace(*ptr) && *ptr != '\n')
+      ptr++;
+
+    // 空白行
+    if (*ptr == '\n') {
+      result.blank++;
+      result.total++;
+      free(buffer);
+      continue;
+    }
+
+    // comment
+    if (*ptr == '<' && *(ptr + 1) == '!' && *(ptr+2) == '-' && *(ptr+3) == '-'){
+      in_multi_line_comment = true;
+      result.comment++;
+      if(strstr(ptr, "-->"))
+        in_multi_line_comment = false;
+      free(buffer);
+      continue;
+    }
+
+    // 代码行
+    result.xml++;
     free(buffer);
   }
 }
@@ -301,7 +381,9 @@ void check_type(const char *name) {
   else if (!strcmp(p_suffix, ".h"))
     code = HEADER;
   else if (!strcmp(p_suffix, ".s"))
-    code = ASM;
+    code = ASM_C;
+  else if (!strcmp(p_suffix, ".asm"))
+    code = ASM_SEMI;
   else if (!strcmp(p_suffix, ".py") || !strcmp(p_suffix, ".pyw"))
     code = PYTHON;
   else if (!strcmp(p_suffix, ".sh"))
@@ -310,6 +392,10 @@ void check_type(const char *name) {
     code = PLAINTEXT;
   else if(!strcmp(p_suffix, ".mk"))
     code = MAKEFILE;
+  else if(!strcmp(p_suffix, ".xml"))
+    code = XML;
+  else if(!strcmp(p_suffix, ".go"))
+    code = GO;
   else
     code = UNKNOWN;
 }

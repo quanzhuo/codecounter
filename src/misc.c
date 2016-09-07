@@ -14,7 +14,8 @@ void print_result(struct statis_data *ptr_data) {
   double  total = ptr_data->c + ptr_data->cpp + ptr_data->java
                 + ptr_data->header + ptr_data->python + ptr_data->perl
                 + ptr_data->shell + ptr_data->makefile +ptr_data->plaintext
-                + ptr_data->comment + ptr_data->blank + ptr_data->assembly;
+                + ptr_data->comment + ptr_data->blank + ptr_data->assembly
+                + ptr_data->xml + ptr_data->go;
   printf("\nITEM:       %10s%10s\n", "COUNT", "PERCENT");
   if (ptr_data->assembly)
     printf("assembly: %10ld%10.2f\n", ptr_data->assembly, ptr_data->assembly/total);
@@ -30,10 +31,14 @@ void print_result(struct statis_data *ptr_data) {
     printf("python:   %10ld%10.2f\n", ptr_data->python, ptr_data->python / total);
   if (ptr_data->perl)
     printf("perl:     %10ld%10.2f\n", ptr_data->perl, ptr_data->perl / total);
+  if (ptr_data->go)
+    printf("go:       %10ld%10.2f\n", ptr_data->go, ptr_data->go / total);
   if(ptr_data->shell)
     printf("shell:    %10ld%10.2f\n", ptr_data->shell, ptr_data->shell / total);
   if(ptr_data->makefile)
     printf("makefile: %10ld%10.2f\n", ptr_data->makefile, ptr_data->makefile / total);
+  if(ptr_data->xml)
+    printf("xml:      %10ld%10.2f\n", ptr_data->xml, ptr_data->xml / total);
   if (ptr_data->comment)
     printf("comment:  %10ld%10.2f\n", ptr_data->comment, ptr_data->comment / total);
   if(ptr_data->plaintext)
