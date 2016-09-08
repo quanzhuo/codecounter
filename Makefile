@@ -11,7 +11,8 @@ INSTDIR = .
 LIBS =
 
 # compiler options
-CFLAGS = -g -DDEBUG
+# CFLAGS = -g -DDEBUG
+CFLAGS = 
 
 # All the object files
 OBJECTS := $(patsubst src%.c, src%.o, $(wildcard src/*.c))
